@@ -53,6 +53,7 @@ class _HomePageState extends State<HomePage> {
   late final GpioLine _ledLine;
   late final GpioLine _buttonLine;
   late final PWM _pwm;
+  late final I2C _i2c;
 
   /// The state of the LED. (true = on, false = off)
   bool _ledState = false;
@@ -123,6 +124,9 @@ class _HomePageState extends State<HomePage> {
 
     // Enable the PWM signal.
     _pwm.enable();
+
+    _i2c = I2C(1);
+    
   }
 
   @override
