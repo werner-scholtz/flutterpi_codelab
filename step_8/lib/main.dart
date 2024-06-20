@@ -3,19 +3,25 @@ import 'package:flutter_gpiod/flutter_gpiod.dart';
 import 'package:dart_periphery/dart_periphery.dart';
 
 /// The label of the [GpioChip] that the LED is connected to.
-const String _gpioChipLabel = 'pinctrl-bcm2835';
+const String gpioChipLabel = 'pinctrl-bcm2835';
 
 /// The name of the [GpioLine]  that the LED is connected to.
-const String _ledGpioLineName = 'GPIO23';
+const String ledGpioLineName = 'GPIO23';
 
 /// The name of the [GpioLine] that the button is connected to.
-const String _buttonGpioLineName = 'GPIO24';
+const String buttonGpioLineName = 'GPIO24';
 
 /// The [PWM] chip number.
-const int _pwmChip = 0;
+const int pwmChip = 0;
 
 /// The [PWM] channel number.
-const int _pwmChannel = 0;
+const int pwmChannel = 0;
+
+/// The bus number of the rtc [I2C] device.
+const int rtcBusNumber = 1;
+
+/// The address of the rtc [I2C] device.
+const int rtcAddress = 0x68;
 
 void main() {
   // Set the libperiphery.so path.
@@ -59,7 +65,7 @@ class _HomePageState extends State<HomePage> {
   bool _ledState = false;
 
   /// The period of the PWM signal in seconds.
-  final double _periodSeconds = 0.01;
+  final double _periodSeconds = 0.005;
 
   /// The duty cycle, this is the amount of time the signal is high compared to the period.
   double _dutyCycle = 0.5;
@@ -73,12 +79,12 @@ class _HomePageState extends State<HomePage> {
 
     // Find the GPIO chip with the label _gpioChipLabel.
     _chip = chips.singleWhere((chip) {
-      return chip.label == _gpioChipLabel;
+      return chip.label == gpioChipLabel;
     });
 
     // Find the GPIO line with the name _ledGpioLineName.
     _ledLine = _chip.lines.singleWhere((line) {
-      return line.info.name == _ledGpioLineName;
+      return line.info.name == ledGpioLineName;
     });
 
     // Request control of the GPIO line. (Because we are using the line as an output use the requestOutput method.)
@@ -89,7 +95,7 @@ class _HomePageState extends State<HomePage> {
 
     // Find the GPIO line with the name _buttonGpioLineName.
     _buttonLine = _chip.lines.singleWhere((line) {
-      return line.info.name == _buttonGpioLineName;
+      return line.info.name == buttonGpioLineName;
     });
 
     // Request control of the _buttonLine. (Because we are using the line as an input use the requestInput method.)
@@ -114,7 +120,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     // Create a new PWM instance.
-    _pwm = PWM(_pwmChip, _pwmChannel);
+    _pwm = PWM(pwmChip, pwmChannel);
 
     // Set the period of the PWM signal.
     _pwm.setPeriod(_periodSeconds);
@@ -126,7 +132,6 @@ class _HomePageState extends State<HomePage> {
     _pwm.enable();
 
     _i2c = I2C(1);
-    
   }
 
   @override
@@ -137,9 +142,12 @@ class _HomePageState extends State<HomePage> {
 
     // Disable the PWM signal.
     _pwm.disable();
+
     // Dispose of the PWM instance.
     _pwm.dispose();
 
+    // Dispose of the I2C instance.
+    _i2c.dispose();
     super.dispose();
   }
 
@@ -180,6 +188,15 @@ class _HomePageState extends State<HomePage> {
                 _pwm.setDutyCycle(value);
               },
             ),
+          ),
+          ElevatedButton(
+            child: const Text("its me"),
+            onPressed: () {
+              _i2c.writeByte(rtcAddress, 0);
+
+              final bytes = _i2c.readBytes(rtcAddress, 7);
+              print(bytes);
+            },
           ),
         ],
       ),
