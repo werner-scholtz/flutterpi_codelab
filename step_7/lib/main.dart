@@ -3,19 +3,19 @@ import 'package:flutter_gpiod/flutter_gpiod.dart';
 import 'package:dart_periphery/dart_periphery.dart';
 
 /// The label of the [GpioChip] that the LED is connected to.
-const String _gpioChipLabel = 'pinctrl-bcm2835';
+const String gpioChipLabel = 'pinctrl-bcm2835';
 
 /// The name of the [GpioLine]  that the LED is connected to.
-const String _ledGpioLineName = 'GPIO23';
+const String ledGpioLineName = 'GPIO23';
 
 /// The name of the [GpioLine] that the button is connected to.
-const String _buttonGpioLineName = 'GPIO24';
+const String buttonGpioLineName = 'GPIO24';
 
 /// The [PWM] chip number.
-const int _pwmChip = 0;
+const int pwmChip = 0;
 
 /// The [PWM] channel number.
-const int _pwmChannel = 0;
+const int pwmChannel = 0;
 
 void main() {
   // Set the libperiphery.so path.
@@ -72,12 +72,12 @@ class _HomePageState extends State<HomePage> {
 
     // Find the GPIO chip with the label _gpioChipLabel.
     _chip = chips.singleWhere((chip) {
-      return chip.label == _gpioChipLabel;
+      return chip.label == gpioChipLabel;
     });
 
     // Find the GPIO line with the name _ledGpioLineName.
     _ledLine = _chip.lines.singleWhere((line) {
-      return line.info.name == _ledGpioLineName;
+      return line.info.name == ledGpioLineName;
     });
 
     // Request control of the GPIO line. (Because we are using the line as an output use the requestOutput method.)
@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage> {
 
     // Find the GPIO line with the name _buttonGpioLineName.
     _buttonLine = _chip.lines.singleWhere((line) {
-      return line.info.name == _buttonGpioLineName;
+      return line.info.name == buttonGpioLineName;
     });
 
     // Request control of the _buttonLine. (Because we are using the line as an input use the requestInput method.)
@@ -113,7 +113,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     // Create a new PWM instance.
-    _pwm = PWM(_pwmChip, _pwmChannel);
+    _pwm = PWM(pwmChip, pwmChannel);
 
     // Set the period of the PWM signal.
     _pwm.setPeriod(_periodSeconds);

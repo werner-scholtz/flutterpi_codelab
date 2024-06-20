@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gpiod/flutter_gpiod.dart';
 
 /// The label of the GPIO chip that the LED is connected to.
-const String _gpioChipLabel = 'pinctrl-bcm2835';
+const String gpioChipLabel = 'pinctrl-bcm2835';
 
 /// The name of the GPIO line that the LED is connected to.
-const String _ledGpioLineName = 'GPIO23';
+const String ledGpioLineName = 'GPIO23';
 
 void main() {
   final chips = FlutterGpiod.instance.chips;
@@ -58,12 +58,12 @@ class _HomePageState extends State<HomePage> {
 
     // Find the GPIO chip with the label _gpioChipLabel.
     _chip = chips.singleWhere((chip) {
-      return chip.label == _gpioChipLabel;
+      return chip.label == gpioChipLabel;
     });
 
     // Find the GPIO line with the name _ledGpioLineName.
     _ledLine = _chip.lines.singleWhere((line) {
-      return line.info.name == _ledGpioLineName;
+      return line.info.name == ledGpioLineName;
     });
 
     // Request control of the GPIO line. (Because we are using the line as an output use the requestOutput method.)
