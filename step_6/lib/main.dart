@@ -11,13 +11,6 @@ const String _ledGpioLineName = 'GPIO23';
 const String _buttonGpioLineName = 'GPIO24';
 
 void main() {
-  final chips = FlutterGpiod.instance.chips;
-  for (final chip in chips) {
-    print("chip name: ${chip.name}, chip label: ${chip.label}");
-    for (final line in chip.lines) {
-      print("  line: $line");
-    }
-  }
   runApp(const MyApp());
 }
 
@@ -46,9 +39,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final GpioChip? _chip;
-  late final GpioLine? _ledLine;
-  late final GpioLine? _buttonLine;
+  late final GpioChip _chip;
+  late final GpioLine _ledLine;
+  late final GpioLine _buttonLine;
 
   /// The state of the LED. (true = on, false = off)
   bool _ledState = false;
@@ -61,28 +54,28 @@ class _HomePageState extends State<HomePage> {
     final chips = FlutterGpiod.instance.chips;
 
     // Find the GPIO chip with the label _gpioChipLabel.
-    _chip = chips.where((chip) {
+    _chip = chips.singleWhere((chip) {
       return chip.label == _gpioChipLabel;
-    }).firstOrNull;
+    });
 
     // Find the GPIO line with the name _ledGpioLineName.
-    _ledLine = _chip?.lines.where((line) {
+    _ledLine = _chip.lines.singleWhere((line) {
       return line.info.name == _ledGpioLineName;
-    }).firstOrNull;
+    });
 
     // Request control of the GPIO line. (Because we are using the line as an output use the requestOutput method.)
-    _ledLine?.requestOutput(
+    _ledLine.requestOutput(
       consumer: 'flutterpi_codelab',
       initialValue: _ledState,
     );
 
     // Find the GPIO line with the name _buttonGpioLineName.
-    _buttonLine = _chip?.lines.where((line) {
+    _buttonLine = _chip.lines.singleWhere((line) {
       return line.info.name == _buttonGpioLineName;
-    }).firstOrNull;
+    });
 
     // Request control of the _buttonLine. (Because we are using the line as an input use the requestInput method.)
-    _buttonLine?.requestInput(
+    _buttonLine.requestInput(
       consumer: 'flutterpi_codelab',
       // Listen for both rising and falling edge signals.
       triggers: {
@@ -94,7 +87,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     // Listen for signal events on the _buttonLine.
-    _buttonLine?.onEvent.listen(
+    _buttonLine.onEvent.listen(
       (event) {
         if (event.edge == SignalEdge.rising) {
           _updateLED(!_ledState);
@@ -106,16 +99,19 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     // Release control of the GPIO line.
-    _ledLine?.release();
-    _buttonLine?.release();
+    _ledLine.release();
+    _buttonLine.release();
     super.dispose();
   }
 
   void _updateLED(bool value) {
+    // Update the UI.
     setState(() {
       _ledState = value;
-      _ledLine?.setValue(value);
     });
+
+    // Set the value of the GPIO line to the new state.
+    _ledLine.setValue(value);
   }
 
   @override

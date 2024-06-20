@@ -43,8 +43,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final GpioChip? _chip;
-  late final GpioLine? _ledLine;
+  late final GpioChip _chip;
+  late final GpioLine _ledLine;
 
   /// The state of the LED. (true = on, false = off)
   bool _ledState = false;
@@ -57,17 +57,17 @@ class _HomePageState extends State<HomePage> {
     final chips = FlutterGpiod.instance.chips;
 
     // Find the GPIO chip with the label _gpioChipLabel.
-    _chip = chips.where((chip) {
+    _chip = chips.singleWhere((chip) {
       return chip.label == _gpioChipLabel;
-    }).firstOrNull;
+    });
 
     // Find the GPIO line with the name _ledGpioLineName.
-    _ledLine = _chip?.lines.where((line) {
+    _ledLine = _chip.lines.singleWhere((line) {
       return line.info.name == _ledGpioLineName;
-    }).firstOrNull;
+    });
 
     // Request control of the GPIO line. (Because we are using the line as an output use the requestOutput method.)
-    _ledLine?.requestOutput(
+    _ledLine.requestOutput(
       consumer: 'flutterpi_codelab',
       initialValue: false,
     );
@@ -76,7 +76,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     // Release control of the GPIO line.
-    _ledLine?.release();
+    _ledLine.release();
     super.dispose();
   }
 
@@ -95,7 +95,7 @@ class _HomePageState extends State<HomePage> {
                 _ledState = value;
 
                 // Set the value of the GPIO line to the new state.
-                _ledLine?.setValue(value);
+                _ledLine.setValue(value);
               });
             },
           ),
