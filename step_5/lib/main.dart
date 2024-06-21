@@ -43,7 +43,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  /// The GPIO chip that the LED is connected to.
   late final GpioChip _chip;
+
+  /// The GPIO line that the LED is connected to.
   late final GpioLine _ledLine;
 
   /// The state of the LED. (true = on, false = off)
@@ -66,7 +69,7 @@ class _HomePageState extends State<HomePage> {
       return line.info.name == ledGpioLineName;
     });
 
-    // Request control of the GPIO line. (Because we are using the line as an output use the requestOutput method.)
+    // Request control of the GPIO line as an output.
     _ledLine.requestOutput(
       consumer: 'flutterpi_codelab',
       initialValue: false,
@@ -93,10 +96,10 @@ class _HomePageState extends State<HomePage> {
               setState(() {
                 // Update the state of the LED.
                 _ledState = value;
-
-                // Set the value of the GPIO line to the new state.
-                _ledLine.setValue(value);
               });
+
+              // Set the value of the GPIO line to the new state.
+              _ledLine.setValue(value);
             },
           ),
         ],

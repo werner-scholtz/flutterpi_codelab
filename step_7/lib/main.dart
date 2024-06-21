@@ -49,9 +49,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  /// The GPIO chip that the LED is connected to.
   late final GpioChip _chip;
+
+  /// The GPIO line that the LED is connected to.
   late final GpioLine _ledLine;
+
+  /// The GPIO line that the button is connected to.
   late final GpioLine _buttonLine;
+
+  /// The PWM instance. (With the chip number and channel number set to where the LED is connected)
   late final PWM _pwm;
 
   /// The state of the LED. (true = on, false = off)
@@ -98,18 +105,12 @@ class _HomePageState extends State<HomePage> {
       triggers: {
         // Rising means that the voltage on the line has risen from low to high.
         SignalEdge.rising,
-        // Falling means that the voltage on the line has dropped from high to low.
-        SignalEdge.falling,
       },
     );
 
     // Listen for signal events on the _buttonLine.
     _buttonLine.onEvent.listen(
-      (event) {
-        if (event.edge == SignalEdge.rising) {
-          _updateLED(!_ledState);
-        }
-      },
+      (event) => _updateLED(!_ledState),
     );
 
     // Create a new PWM instance.

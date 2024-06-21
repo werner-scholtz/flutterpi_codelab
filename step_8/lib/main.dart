@@ -55,11 +55,22 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  /// The GPIO chip that the LED is connected to.
   late final GpioChip _chip;
+
+  /// The GPIO line that the LED is connected to.
   late final GpioLine _ledLine;
+
+  /// The GPIO line that the button is connected to.
   late final GpioLine _buttonLine;
+
+  /// The PWM instance. (With the chip number and channel number set to where the LED is connected)
   late final PWM _pwm;
+
+  /// The I2C instance on the bus where the RTC module is connected.
   late final I2C _i2c;
+
+  /// The RTC instance.
   late final DS1307 _rtc;
 
   /// The update frequency of the system time.
@@ -124,18 +135,12 @@ class _HomePageState extends State<HomePage> {
       triggers: {
         // Rising means that the voltage on the line has risen from low to high.
         SignalEdge.rising,
-        // Falling means that the voltage on the line has dropped from high to low.
-        SignalEdge.falling,
       },
     );
 
     // Listen for signal events on the _buttonLine.
     _buttonLine.onEvent.listen(
-      (event) {
-        if (event.edge == SignalEdge.rising) {
-          _updateLED(!_ledState);
-        }
-      },
+      (event) => _updateLED(!_ledState),
     );
 
     // Create a new PWM instance.
@@ -242,24 +247,24 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-ValueListenableBuilder(
-  valueListenable: _systemTime,
-  builder: (context, value, child) {
-    return ListTile(
-      title: Text(value.toString()),
-      subtitle: const Text('System Time'),
-    );
-  },
-),
-ValueListenableBuilder(
-  valueListenable: _rtcTime,
-  builder: (context, value, child) {
-    return ListTile(
-      title: Text(value.toString()),
-      subtitle: const Text('RTC Time'),
-    );
-  },
-),
+          ValueListenableBuilder(
+            valueListenable: _systemTime,
+            builder: (context, value, child) {
+              return ListTile(
+                title: Text(value.toString()),
+                subtitle: const Text('System Time'),
+              );
+            },
+          ),
+          ValueListenableBuilder(
+            valueListenable: _rtcTime,
+            builder: (context, value, child) {
+              return ListTile(
+                title: Text(value.toString()),
+                subtitle: const Text('RTC Time'),
+              );
+            },
+          ),
         ],
       ),
     );
