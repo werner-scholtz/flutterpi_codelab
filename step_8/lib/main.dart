@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gpiod/flutter_gpiod.dart';
 import 'package:dart_periphery/dart_periphery.dart';
+import 'package:flutterpi_codelab/ds1307.dart';
 
 /// The label of the [GpioChip] that the LED is connected to.
 const String gpioChipLabel = 'pinctrl-bcm2835';
@@ -18,10 +21,7 @@ const int pwmChip = 0;
 const int pwmChannel = 0;
 
 /// The bus number of the rtc [I2C] device.
-const int rtcBusNumber = 1;
-
-/// The address of the rtc [I2C] device.
-const int rtcAddress = 0x68;
+const int i2cBus = 1;
 
 void main() {
   // Set the libperiphery.so path.
@@ -60,6 +60,13 @@ class _HomePageState extends State<HomePage> {
   late final GpioLine _buttonLine;
   late final PWM _pwm;
   late final I2C _i2c;
+  late final DS1307 _rtc;
+
+  final _systemTimerFrequency = const Duration(milliseconds: 100);
+  late final Timer _systemTimeUpdateTimer;
+
+  final _rtcTimerFrequency = const Duration(seconds: 1);
+  late final Timer _rtcTimeUpdateTimer;
 
   /// The state of the LED. (true = on, false = off)
   bool _ledState = false;
@@ -69,6 +76,12 @@ class _HomePageState extends State<HomePage> {
 
   /// The duty cycle, this is the amount of time the signal is high compared to the period.
   double _dutyCycle = 0.5;
+
+  /// A [ValueNotifier] that holds the system's [DateTime].
+  late final ValueNotifier<DateTime> _systemTime;
+
+  /// A [ValueNotifier] that holds the RTC's [DateTime].
+  late final ValueNotifier<DateTime> _rtcTime;
 
   @override
   void initState() {
@@ -131,7 +144,36 @@ class _HomePageState extends State<HomePage> {
     // Enable the PWM signal.
     _pwm.enable();
 
-    _i2c = I2C(1);
+    // Create a new I2C instance on bus 1.
+    _i2c = I2C(i2cBus);
+
+    // Create a new TinyRTC instance.
+    _rtc = DS1307(_i2c);
+
+    final now = DateTime.now();
+
+    // Initialize the ValueNotifiers.
+    _systemTime = ValueNotifier(now);
+    _rtcTime = ValueNotifier(now);
+
+    // Adjust the RTC to the current date and time.
+    _rtc.adjust(now);
+
+    _systemTimeUpdateTimer = Timer.periodic(_systemTimerFrequency, (timer) {
+      // Read the current system DateTime.
+      final systemDateTime = DateTime.now();
+
+      // Update the UI.
+      _systemTime.value = systemDateTime;
+    });
+
+    _rtcTimeUpdateTimer = Timer.periodic(_rtcTimerFrequency, (timer) {
+      // Read the current RTC DateTime.
+      final rtcDateTime = _rtc.read();
+
+      // Update the UI.
+      _rtcTime.value = rtcDateTime ?? _rtcTime.value;
+    });
   }
 
   @override
@@ -148,6 +190,11 @@ class _HomePageState extends State<HomePage> {
 
     // Dispose of the I2C instance.
     _i2c.dispose();
+
+    // Cancel the timers.
+    _systemTimeUpdateTimer.cancel();
+    _rtcTimeUpdateTimer.cancel();
+
     super.dispose();
   }
 
@@ -173,7 +220,7 @@ class _HomePageState extends State<HomePage> {
             onChanged: (value) => _updateLED(value),
           ),
           ListTile(
-            title: const Text('PWM duty cycle'),
+            title: const Text('PWM Duty Cycle'),
             subtitle: Slider(
               min: 0,
               max: 1,
@@ -189,13 +236,22 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-          ElevatedButton(
-            child: const Text("its me"),
-            onPressed: () {
-              _i2c.writeByte(rtcAddress, 0);
-
-              final bytes = _i2c.readBytes(rtcAddress, 7);
-              print(bytes);
+          ValueListenableBuilder(
+            valueListenable: _systemTime,
+            builder: (context, value, child) {
+              return ListTile(
+                title: Text(value.toString()),
+                subtitle: const Text('System Time'),
+              );
+            },
+          ),
+          ValueListenableBuilder(
+            valueListenable: _rtcTime,
+            builder: (context, value, child) {
+              return ListTile(
+                title: Text(value.toString()),
+                subtitle: const Text('RTC Time'),
+              );
             },
           ),
         ],
