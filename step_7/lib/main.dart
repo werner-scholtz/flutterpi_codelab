@@ -161,7 +161,7 @@ class _HomePageState extends State<HomePage> {
             onChanged: (value) => _updateLED(value),
           ),
           ListTile(
-            title: const Text('PWM duty cycle'),
+            title: const Text('PWM Duty Cycle'),
             subtitle: Slider(
               min: 0,
               max: 1,
