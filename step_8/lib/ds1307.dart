@@ -18,16 +18,17 @@ class DS1307 {
     this.address = ds1307DefaultI2CAddress,
   ]);
 
-  /// Convert a BCD value to binary.
+  /// Convert a binary-coded decimal(BCD) value to binary integer.
   static int bcd2bin(int val) {
     // Convert BCD to binary by subtracting 6 times the value of the tens place
     return val - 6 * (val >> 4);
   }
 
-  /// Convert a binary value to BCD.
+  /// Convert a binary integer to binary-coded decimal (BCD).
+  ///
+  ///  This function converts a binary (decimal) value to its BCD (Binary-Coded Decimal) equivalent.
   static int bin2bcd(int val) {
-    // Convert binary to BCD by adding 6 times the value of the tens place
-    // This function converts a binary (decimal) value to its BCD (Binary-Coded Decimal) equivalent.
+    // Convert binary to BCD by adding 6 times the value of the tens place.
     return val + 6 * (val ~/ 10);
   }
 
@@ -35,28 +36,26 @@ class DS1307 {
   bool isRunning() {
     i2c.writeByte(address, 0);
 
-    final ss = i2c.readByte(address);
+    final seconds = i2c.readByte(address);
 
-    // Isolate the MSB and negate it to determine if the RTC is running
+    // Isolate the most significant bit (MSB) and negate it to determine if the RTC is running
     // If the MSB is 0, the RTC is running, so return true; otherwise, return false.
-    return (ss >> 7) == 0;
+    return (seconds >> 7) == 0;
   }
 
   /// Adjust the RTC to the given [DateTime].
   void adjust(DateTime dateTime) {
+    final seconds = bin2bcd(dateTime.second);
+    final minutes = bin2bcd(dateTime.minute);
+    final hours = bin2bcd(dateTime.hour);
+    final weekday = bin2bcd(dateTime.weekday);
+    final day = bin2bcd(dateTime.day);
+    final month = bin2bcd(dateTime.month);
+    final year = bin2bcd(dateTime.year - defaultYearAdjustment);
+
     i2c.writeBytes(
       address,
-      [
-        0,
-        bin2bcd(dateTime.second),
-        bin2bcd(dateTime.minute),
-        bin2bcd(dateTime.hour),
-        bin2bcd(dateTime.weekday),
-        bin2bcd(dateTime.day),
-        bin2bcd(dateTime.month),
-        bin2bcd(dateTime.year - defaultYearAdjustment),
-        0,
-      ],
+      [0, seconds, minutes, hours, weekday, day, month, year, 0],
     );
   }
 
@@ -66,15 +65,14 @@ class DS1307 {
       i2c.writeByte(address, 0);
 
       final data = i2c.readBytes(address, 7);
+      final seconds = bcd2bin(data[0]);
+      final minutes = bcd2bin(data[1]);
+      final hours = bcd2bin(data[2]);
+      final day = bcd2bin(data[4]);
+      final month = bcd2bin(data[5]);
+      final year = bcd2bin(data[6]) + defaultYearAdjustment;
 
-      return DateTime(
-        2000 + bcd2bin(data[6]),
-        bcd2bin(data[5]),
-        bcd2bin(data[4]),
-        bcd2bin(data[2]),
-        bcd2bin(data[1]),
-        bcd2bin(data[0]),
-      );
+      return DateTime(year, month, day, hours, minutes, seconds, 0, 0);
     } catch (e) {
       debugPrint(e.toString());
       return null;

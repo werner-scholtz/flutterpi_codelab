@@ -62,11 +62,23 @@ class _HomePageState extends State<HomePage> {
   late final I2C _i2c;
   late final DS1307 _rtc;
 
+  /// The update frequency of the system time.
   final _systemTimerFrequency = const Duration(milliseconds: 100);
+
+  /// The timer that updates the system time.
   late final Timer _systemTimeUpdateTimer;
 
+  /// The update frequency of the RTC time.
   final _rtcTimerFrequency = const Duration(seconds: 1);
+
+  /// The timer that updates the RTC time.
   late final Timer _rtcTimeUpdateTimer;
+
+  /// A [ValueNotifier] that holds the system's [DateTime].
+  late final ValueNotifier<DateTime> _systemTime;
+
+  /// A [ValueNotifier] that holds the RTC's [DateTime].
+  late final ValueNotifier<DateTime> _rtcTime;
 
   /// The state of the LED. (true = on, false = off)
   bool _ledState = false;
@@ -76,12 +88,6 @@ class _HomePageState extends State<HomePage> {
 
   /// The duty cycle, this is the amount of time the signal is high compared to the period.
   double _dutyCycle = 0.5;
-
-  /// A [ValueNotifier] that holds the system's [DateTime].
-  late final ValueNotifier<DateTime> _systemTime;
-
-  /// A [ValueNotifier] that holds the RTC's [DateTime].
-  late final ValueNotifier<DateTime> _rtcTime;
 
   @override
   void initState() {
@@ -151,13 +157,13 @@ class _HomePageState extends State<HomePage> {
     _rtc = DS1307(_i2c);
 
     final now = DateTime.now();
+    _rtc.adjust(now);
 
     // Initialize the ValueNotifiers.
     _systemTime = ValueNotifier(now);
     _rtcTime = ValueNotifier(now);
 
     // Adjust the RTC to the current date and time.
-    _rtc.adjust(now);
 
     _systemTimeUpdateTimer = Timer.periodic(_systemTimerFrequency, (timer) {
       // Read the current system DateTime.
@@ -236,24 +242,24 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-          ValueListenableBuilder(
-            valueListenable: _systemTime,
-            builder: (context, value, child) {
-              return ListTile(
-                title: Text(value.toString()),
-                subtitle: const Text('System Time'),
-              );
-            },
-          ),
-          ValueListenableBuilder(
-            valueListenable: _rtcTime,
-            builder: (context, value, child) {
-              return ListTile(
-                title: Text(value.toString()),
-                subtitle: const Text('RTC Time'),
-              );
-            },
-          ),
+ValueListenableBuilder(
+  valueListenable: _systemTime,
+  builder: (context, value, child) {
+    return ListTile(
+      title: Text(value.toString()),
+      subtitle: const Text('System Time'),
+    );
+  },
+),
+ValueListenableBuilder(
+  valueListenable: _rtcTime,
+  builder: (context, value, child) {
+    return ListTile(
+      title: Text(value.toString()),
+      subtitle: const Text('RTC Time'),
+    );
+  },
+),
         ],
       ),
     );
