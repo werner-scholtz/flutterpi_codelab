@@ -89,12 +89,12 @@ class _HomePageState extends State<HomePage> {
       },
     );
 
-// Listen for signal events on the _buttonLine.
-_buttonLine.onEvent.listen(
-  (event) => print(event),
-);
+    // Listen for signal events on the _buttonLine.
+    _buttonLine.onEvent.listen(
+      (event) => print(event),
+    );
 
-// _updateLED(!_ledState)
+    // _updateLED(!_ledState)
   }
 
   @override
