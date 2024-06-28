@@ -2,7 +2,7 @@ import 'package:dart_periphery/dart_periphery.dart';
 import 'package:flutter/material.dart';
 
 /// Default I2C address of the DS1307.
-const int ds1307DefaultI2CAddress = 0x68;
+const int defaultDS1307I2CAddress = 0x68;
 
 /// The year adjustment used for 2000 to 2099.
 ///
@@ -12,10 +12,12 @@ const int defaultYearAdjustment = 2000;
 class DS1307 {
   final I2C i2c;
   final int address;
+  final int yearAdjustment;
 
   DS1307(
     this.i2c, [
-    this.address = ds1307DefaultI2CAddress,
+    this.address = defaultDS1307I2CAddress,
+    this.yearAdjustment = defaultYearAdjustment,
   ]);
 
   /// Convert a binary-coded decimal(BCD) value to binary integer.
@@ -51,7 +53,7 @@ class DS1307 {
     final weekday = bin2bcd(dateTime.weekday);
     final day = bin2bcd(dateTime.day);
     final month = bin2bcd(dateTime.month);
-    final year = bin2bcd(dateTime.year - defaultYearAdjustment);
+    final year = bin2bcd(dateTime.year - yearAdjustment);
 
     i2c.writeBytes(
       address,
@@ -70,7 +72,7 @@ class DS1307 {
       final hours = bcd2bin(data[2]);
       final day = bcd2bin(data[4]);
       final month = bcd2bin(data[5]);
-      final year = bcd2bin(data[6]) + defaultYearAdjustment;
+      final year = bcd2bin(data[6]) + yearAdjustment;
 
       return DateTime(year, month, day, hours, minutes, seconds, 0, 0);
     } catch (e) {
