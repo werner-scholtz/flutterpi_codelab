@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gpiod/flutter_gpiod.dart';
 
-/// The label of the GPIO chip that the LED is connected to.
-const String gpioChipLabel = 'pinctrl-bcm2835';
+/// The name of the [GpioChip] that the LED is connected to.
+const String gpioChipName = 'gpiochip0';
 
-/// The name of the GPIO line that the LED is connected to.
+/// The name of the [GpioLine] that the LED is connected to.
 const String ledGpioLineName = 'GPIO23';
 
 void main() {
@@ -61,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // Find the GPIO chip with the label _gpioChipLabel.
     _chip = chips.singleWhere((chip) {
-      return chip.label == gpioChipLabel;
+      return chip.name == gpioChipName;
     });
 
     // Find the GPIO line with the name _ledGpioLineName.
@@ -72,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // Request control of the GPIO line as an output.
     _ledLine.requestOutput(
       consumer: 'flutterpi_codelab',
-      initialValue: false,
+      initialValue: _ledState,
     );
   }
 
@@ -92,18 +92,20 @@ class _MyHomePageState extends State<MyHomePage> {
           SwitchListTile(
             title: const Text('LED Switch'),
             value: _ledState,
-            onChanged: (value) {
-              setState(() {
-                // Update the state of the LED.
-                _ledState = value;
-              });
-
-              // Set the value of the GPIO line to the new state.
-              _ledLine.setValue(value);
-            },
+            onChanged: _updateLED,
           ),
         ],
       ),
     );
+  }
+
+  void _updateLED(value) {
+    setState(() {
+      // Update the state of the LED.
+      _ledState = value;
+    });
+
+    // Set the value of the GPIO line to the new state.
+    _ledLine.setValue(value);
   }
 }

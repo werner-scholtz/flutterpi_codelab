@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gpiod/flutter_gpiod.dart';
 
-/// The label of the [GpioChip] that the LED is connected to.
-const String gpioChipLabel = 'pinctrl-bcm2835';
+/// The name of the [GpioChip] that the LED is connected to.
+const String gpioChipName = 'gpiochip0';
 
-/// The name of the [GpioLine]  that the LED is connected to.
+/// The name of the [GpioLine] that the LED is connected to.
 const String ledGpioLineName = 'GPIO23';
 
 /// The name of the [GpioLine] that the button is connected to.
@@ -60,7 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // Find the GPIO chip with the label _gpioChipLabel.
     _chip = chips.singleWhere((chip) {
-      return chip.label == gpioChipLabel;
+      return chip.name == gpioChipName;
     });
 
     // Find the GPIO line with the name _ledGpioLineName.
@@ -82,19 +82,25 @@ class _MyHomePageState extends State<MyHomePage> {
     // Request control of the _buttonLine. (Because we are using the line as an input use the requestInput method.)
     _buttonLine.requestInput(
       consumer: 'flutterpi_codelab',
-      // Listen for both rising and falling edge signals.
       triggers: {
         // Rising means that the voltage on the line has risen from low to high.
         SignalEdge.rising,
+        // Falling means that the voltage on the line has dropped from high to low.
+        SignalEdge.falling,
       },
     );
 
     // Listen for signal events on the _buttonLine.
-    _buttonLine.onEvent.listen(
-      (event) => print(event),
-    );
-
-    // _updateLED(!_ledState)
+    _buttonLine.onEvent.listen((event) {
+      switch (event.edge) {
+        case SignalEdge.rising:
+          _updateLED(true);
+          break;
+        case SignalEdge.falling:
+          _updateLED(false);
+          break;
+      }
+    });
   }
 
   @override
@@ -103,16 +109,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _ledLine.release();
     _buttonLine.release();
     super.dispose();
-  }
-
-  void _updateLED(bool value) {
-    // Update the UI.
-    setState(() {
-      _ledState = value;
-    });
-
-    // Set the value of the GPIO line to the new state.
-    _ledLine.setValue(value);
   }
 
   @override
@@ -124,10 +120,20 @@ class _MyHomePageState extends State<MyHomePage> {
           SwitchListTile(
             title: const Text('LED Switch'),
             value: _ledState,
-            onChanged: (value) => _updateLED(value),
+            onChanged: _updateLED,
           ),
         ],
       ),
     );
+  }
+
+  void _updateLED(value) {
+    setState(() {
+      // Update the state of the LED.
+      _ledState = value;
+    });
+
+    // Set the value of the GPIO line to the new state.
+    _ledLine.setValue(value);
   }
 }
