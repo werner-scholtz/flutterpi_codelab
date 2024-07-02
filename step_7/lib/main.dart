@@ -136,7 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    // Release control of the GPIO line.
+    // Release control of the GPIO line(s).
     _ledLine.release();
     _buttonLine.release();
 

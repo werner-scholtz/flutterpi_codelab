@@ -1,9 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_gpiod/flutter_gpiod.dart';
 import 'package:dart_periphery/dart_periphery.dart';
-import 'package:flutterpi_codelab/ds1307.dart';
+import 'package:flutterpi_codelab/src/ds1307.dart';
+import 'package:flutterpi_codelab/src/real_time_clock_widget.dart';
 
 /// The name of the [GpioChip] that the LED is connected to.
 const String gpioChipName = 'gpiochip0';
@@ -72,24 +71,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   /// The RTC instance.
   late final DS1307 _rtc;
-
-  /// The update frequency of the system time.
-  final _systemTimerFrequency = const Duration(milliseconds: 100);
-
-  /// The timer that updates the system time.
-  late final Timer _systemTimeUpdateTimer;
-
-  /// The update frequency of the RTC time.
-  final _rtcTimerFrequency = const Duration(seconds: 1);
-
-  /// The timer that updates the RTC time.
-  late final Timer _rtcTimeUpdateTimer;
-
-  /// A [ValueNotifier] that holds the system's [DateTime].
-  late final ValueNotifier<DateTime> _systemTime;
-
-  /// A [ValueNotifier] that holds the RTC's [DateTime].
-  late final ValueNotifier<DateTime> _rtcTime;
 
   /// The state of the LED. (true = on, false = off)
   bool _ledState = false;
@@ -168,36 +149,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // Create a new TinyRTC instance.
     _rtc = DS1307(_i2c);
-
-    final now = DateTime.now();
-    _rtc.adjust(now);
-
-    // Initialize the ValueNotifiers.
-    _systemTime = ValueNotifier(now);
-    _rtcTime = ValueNotifier(now);
-
-    // Adjust the RTC to the current date and time.
-
-    _systemTimeUpdateTimer = Timer.periodic(_systemTimerFrequency, (timer) {
-      // Read the current system DateTime.
-      final systemDateTime = DateTime.now();
-
-      // Update the UI.
-      _systemTime.value = systemDateTime;
-    });
-
-    _rtcTimeUpdateTimer = Timer.periodic(_rtcTimerFrequency, (timer) {
-      // Read the current RTC DateTime.
-      final rtcDateTime = _rtc.read();
-
-      // Update the UI.
-      _rtcTime.value = rtcDateTime ?? _rtcTime.value;
-    });
   }
 
   @override
   void dispose() {
-    // Release control of the GPIO line.
+    // Release control of the GPIO line(s).
     _ledLine.release();
     _buttonLine.release();
 
@@ -209,10 +165,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // Dispose of the I2C instance.
     _i2c.dispose();
-
-    // Cancel the timers.
-    _systemTimeUpdateTimer.cancel();
-    _rtcTimeUpdateTimer.cancel();
 
     super.dispose();
   }
@@ -245,24 +197,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
           ),
-          ValueListenableBuilder(
-            valueListenable: _systemTime,
-            builder: (context, value, child) {
-              return ListTile(
-                title: Text(value.toString()),
-                subtitle: const Text('System Time'),
-              );
-            },
-          ),
-          ValueListenableBuilder(
-            valueListenable: _rtcTime,
-            builder: (context, value, child) {
-              return ListTile(
-                title: Text(value.toString()),
-                subtitle: const Text('RTC Time'),
-              );
-            },
-          ),
+          RealTimeClockWidget(rtc: _rtc),
         ],
       ),
     );
