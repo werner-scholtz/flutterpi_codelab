@@ -71,13 +71,22 @@ This codelab is focused on flutter and flutter-pi. Non-relevant concepts and cod
 2. Follow these [instructions](https://github.com/ardera/flutterpi_tool?tab=readme-ov-file#examples) to add your Pi as a device.
 3. Then do `flutterpi_tool run -d <device-id>`.
 
-**_NOTE:_**  If the above does not work for you can use the following method:
 
-1. First enable [custom-devices](https://github.com/flutter/flutter/blob/master/docs/tool/Using-custom-embedders-with-the-Flutter-CLI.md#the-custom-devices-config-file).
-2. Then add your pi as a custom-device [instructions](https://github.com/flutter/flutter/blob/master/docs/tool/Using-custom-embedders-with-the-Flutter-CLI.md#configuring-your-custom-device).  
+### Workarounds
 
-...TODO: finish this.
+#### Linux
 
+1. If you get the following error on linux after running `flutterpi_tool run -d <device-id>`.
+  ```
+  ProcessException: Process exited abnormally with code 126
+  Command: /tmp/flutterpi_codelab/flutter-pi /tmp/flutterpi_codelab --enable-dart-profiling=true --enable-checked-mode=true --verify-entry-points=true --vm-service-port=33895
+  ```
+2. You can run the following command, this makes the flutter-pi binary executable.  
+  You can find the binary under `build/flutter-pi/../flutter-pi`
+
+```shell
+sudo chmod +x build/flutter-pi/aarch64-generic/flutter-pi 
+```
 
 # 3. Control an LED with GPIO
 
