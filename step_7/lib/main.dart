@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gpiod/flutter_gpiod.dart';
 import 'package:dart_periphery/dart_periphery.dart';
+import 'package:flutterpi_codelab/src/ds1307.dart';
+import 'package:flutterpi_codelab/src/real_time_clock_widget.dart';
 
 /// The name of the [GpioChip] that the LED is connected to.
 const String gpioChipName = 'gpiochip0';
@@ -16,6 +18,9 @@ const int pwmChip = 0;
 
 /// The [PWM] channel number.
 const int pwmChannel = 0;
+
+/// The bus number of the rtc [I2C] device.
+const int i2cBus = 1;
 
 void main() {
   // Set the libperiphery.so path.
@@ -61,11 +66,17 @@ class _MyHomePageState extends State<MyHomePage> {
   /// The PWM instance. (With the chip number and channel number set to where the LED is connected)
   late final PWM _pwm;
 
+  /// The I2C instance on the bus where the RTC module is connected.
+  late final I2C _i2c;
+
+  /// The RTC instance.
+  late final DS1307 _rtc;
+
   /// The state of the LED. (true = on, false = off)
   bool _ledState = false;
 
   /// The period of the PWM signal in seconds.
-  final double _periodSeconds = 0.01;
+  final double _periodSeconds = 0.005;
 
   /// The duty cycle, this is the amount of time the signal is high compared to the period.
   double _dutyCycle = 0.5;
@@ -132,6 +143,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // Enable the PWM signal.
     _pwm.enable();
+
+    // Create a new I2C instance on bus 1.
+    _i2c = I2C(i2cBus);
+
+    // Create a new TinyRTC instance.
+    _rtc = DS1307(_i2c);
   }
 
   @override
@@ -142,8 +159,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // Disable the PWM signal.
     _pwm.disable();
+
     // Dispose of the PWM instance.
     _pwm.dispose();
+
+    // Dispose of the I2C instance.
+    _i2c.dispose();
 
     super.dispose();
   }
@@ -176,6 +197,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
           ),
+          RealTimeClockWidget(rtc: _rtc),
         ],
       ),
     );

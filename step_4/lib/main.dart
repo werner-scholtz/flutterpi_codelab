@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gpiod/flutter_gpiod.dart';
+
+/// The name of the [GpioChip] that the LED is connected to.
+const String gpioChipName = 'gpiochip0';
+
+/// The name of the [GpioLine] that the LED is connected to.
+const String ledGpioLineName = 'GPIO23';
 
 void main() {
+  final chips = FlutterGpiod.instance.chips;
+  for (final chip in chips) {
+    print("chip name: ${chip.name}, chip label: ${chip.label}");
+    for (final line in chip.lines) {
+      print("  line: $line");
+    }
+  }
   runApp(const MyApp());
 }
 
@@ -29,15 +43,70 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  /// The GPIO chip that the LED is connected to.
+  late final GpioChip _chip;
+
+  /// The GPIO line that the LED is connected to.
+  late final GpioLine _ledLine;
+
+  /// The state of the LED. (true = on, false = off)
+  bool _ledState = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Retrieve a list of GPIO chips attached to the system.
+    final chips = FlutterGpiod.instance.chips;
+
+    // Find the GPIO chip with the label _gpioChipLabel.
+    _chip = chips.singleWhere((chip) {
+      return chip.name == gpioChipName;
+    });
+
+    // Find the GPIO line with the name _ledGpioLineName.
+    _ledLine = _chip.lines.singleWhere((line) {
+      return line.info.name == ledGpioLineName;
+    });
+
+    // Request control of the GPIO line as an output.
+    _ledLine.requestOutput(
+      consumer: 'flutterpi_codelab',
+      initialValue: _ledState,
+    );
+  }
+
+  @override
+  void dispose() {
+    // Release control of the GPIO line(s).
+    _ledLine.release();
+
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Flutter Pi Codelab'),
-      ),
+      appBar: AppBar(title: const Text('Flutter Pi Codelab')),
       body: ListView(
-        children: const <Widget>[],
+        children: <Widget>[
+          SwitchListTile(
+            title: const Text('LED Switch'),
+            value: _ledState,
+            onChanged: _updateLED,
+          ),
+        ],
       ),
     );
+  }
+
+  void _updateLED(value) {
+    setState(() {
+      // Update the state of the LED.
+      _ledState = value;
+    });
+
+    // Set the value of the GPIO line to the new state.
+    _ledLine.setValue(value);
   }
 }

@@ -7,14 +7,10 @@ const String gpioChipName = 'gpiochip0';
 /// The name of the [GpioLine] that the LED is connected to.
 const String ledGpioLineName = 'GPIO23';
 
+/// The name of the [GpioLine] that the button is connected to.
+const String buttonGpioLineName = 'GPIO24';
+
 void main() {
-  final chips = FlutterGpiod.instance.chips;
-  for (final chip in chips) {
-    print("chip name: ${chip.name}, chip label: ${chip.label}");
-    for (final line in chip.lines) {
-      print("  line: $line");
-    }
-  }
   runApp(const MyApp());
 }
 
@@ -49,6 +45,9 @@ class _MyHomePageState extends State<MyHomePage> {
   /// The GPIO line that the LED is connected to.
   late final GpioLine _ledLine;
 
+  /// The GPIO line that the button is connected to.
+  late final GpioLine _buttonLine;
+
   /// The state of the LED. (true = on, false = off)
   bool _ledState = false;
 
@@ -69,17 +68,46 @@ class _MyHomePageState extends State<MyHomePage> {
       return line.info.name == ledGpioLineName;
     });
 
-    // Request control of the GPIO line as an output.
+    // Request control of the GPIO line. (Because we are using the line as an output use the requestOutput method.)
     _ledLine.requestOutput(
       consumer: 'flutterpi_codelab',
       initialValue: _ledState,
     );
+
+    // Find the GPIO line with the name _buttonGpioLineName.
+    _buttonLine = _chip.lines.singleWhere((line) {
+      return line.info.name == buttonGpioLineName;
+    });
+
+    // Request control of the _buttonLine. (Because we are using the line as an input use the requestInput method.)
+    _buttonLine.requestInput(
+      consumer: 'flutterpi_codelab',
+      triggers: {
+        // Rising means that the voltage on the line has risen from low to high.
+        SignalEdge.rising,
+        // Falling means that the voltage on the line has dropped from high to low.
+        SignalEdge.falling,
+      },
+    );
+
+    // Listen for signal events on the _buttonLine.
+    _buttonLine.onEvent.listen((event) {
+      switch (event.edge) {
+        case SignalEdge.rising:
+          _updateLED(true);
+          break;
+        case SignalEdge.falling:
+          _updateLED(false);
+          break;
+      }
+    });
   }
 
   @override
   void dispose() {
     // Release control of the GPIO line(s).
     _ledLine.release();
+    _buttonLine.release();
 
     super.dispose();
   }

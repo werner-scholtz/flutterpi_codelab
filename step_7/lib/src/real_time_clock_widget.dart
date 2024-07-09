@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutterpi_codelab/src/ds1307.dart';
 
-class RTCWidget extends StatefulWidget {
+class RealTimeClockWidget extends StatefulWidget {
   final DS1307 rtc;
 
-  const RTCWidget({
+  const RealTimeClockWidget({
     super.key,
     required this.rtc,
   });
 
   @override
-  State<RTCWidget> createState() => _RTCWidgetState();
+  State<RealTimeClockWidget> createState() => _RealTimeClockWidgetState();
 }
 
-class _RTCWidgetState extends State<RTCWidget> {
+class _RealTimeClockWidgetState extends State<RealTimeClockWidget> {
   /// The [DateTime] read from the [DS1307].
   DateTime? _rtcTime;
 
