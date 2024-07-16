@@ -139,7 +139,7 @@ chip name: gpiochip0, chip label: pinctrl-bcm2835
 
 ```
 
-**_NOTE:_** Taking a loot at the output from this command it is easy to deduce which chip to use in this case GPIO23 is connected to gpiochip0.
+**_NOTE:_** Taking a look at the output from this command it is easy to deduce which chip to use in this case GPIO23 is connected to gpiochip0.
 
 Define two global variables `_gpioChipName` and `_gpioLineName` in your main.dart.
 ```dart
