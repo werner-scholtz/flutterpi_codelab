@@ -1,4 +1,4 @@
-# Getting started with flutter-pi
+# Getting started with flutter-pi and peripherals
 
 ## What you'll build
 
